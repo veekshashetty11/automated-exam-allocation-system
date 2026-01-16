@@ -54,6 +54,28 @@
         <li>Handle late students</li>
         <li>Assign invigilators fairly</li>
     </ol>
+
+  <h2>Try the Allocation Demo</h2>
+
+  <label>Number of Classrooms:</label>
+  <input type="number" id="classrooms" /><br><br>
+
+  <label>Seats per Classroom:</label>
+  <input type="number" id="seats" /><br><br>
+
+  <label>Number of Students:</label>
+  <input type="number" id="students" /><br><br>
+
+  <label>Subject Codes (comma separated):</label>
+  <input type="text" id="subjects" placeholder="1,1,2,3,3" /><br><br>
+
+  <button onclick="runAllocation()">Run Allocation</button>
+</section>
+
+<section>
+  <h2>Allocation Output</h2>
+  <pre id="output"></pre>
+
 </section>
 
 <section>
