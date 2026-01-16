@@ -5,14 +5,14 @@ using namespace std;
 // Student structure
 struct Student {
     int id;
-    int subject;     // subject code
+    int subject;      // subject code
     char questionSet; // A, B, C, D
 };
 
 // Invigilator structure
 struct Invigilator {
     int id;
-    int load; // number of halls assigned
+    int load;
 };
 
 int main() {
@@ -29,24 +29,21 @@ int main() {
         cout << "Enter subject code for student " << i << ": ";
         cin >> s.subject;
 
-        s.questionSet = '-'; // not assigned yet
+        s.questionSet = '-';
         students.push_back(s);
     }
 
     // Assign question sets using simple greedy approach
-char sets[] = {'A', 'B', 'C', 'D'};
+    char sets[] = {'A', 'B', 'C', 'D'};
+    for (int i = 0; i < students.size(); i++) {
+        students[i].questionSet = sets[i % 4];
+    }
 
-for (int i = 0; i < students.size(); i++) {
-    students[i].questionSet = sets[i % 4];
-}
-
-cout << "\nStudent Details After Question Set Allocation:\n";
-for (auto s : students) {
-    cout << "Student ID: " << s.id
-         << ", Subject: " << s.subject
-         << ", Question Set: " << s.questionSet << endl;
-}
-
+    cout << "\nStudent Details After Question Set Allocation:\n";
+    for (auto s : students) {
+        cout << "Student ID: " << s.id
+             << ", Subject: " << s.subject
+             << ", Question Set: " << s.questionSet << endl;
     }
 
     return 0;
