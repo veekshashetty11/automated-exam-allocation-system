@@ -33,11 +33,20 @@ int main() {
         students.push_back(s);
     }
 
-    cout << "\nStudent Details:\n";
-    for (auto s : students) {
-        cout << "Student ID: " << s.id
-             << ", Subject: " << s.subject
-             << ", Question Set: " << s.questionSet << endl;
+    // Assign question sets using simple greedy approach
+char sets[] = {'A', 'B', 'C', 'D'};
+
+for (int i = 0; i < students.size(); i++) {
+    students[i].questionSet = sets[i % 4];
+}
+
+cout << "\nStudent Details After Question Set Allocation:\n";
+for (auto s : students) {
+    cout << "Student ID: " << s.id
+         << ", Subject: " << s.subject
+         << ", Question Set: " << s.questionSet << endl;
+}
+
     }
 
     return 0;
