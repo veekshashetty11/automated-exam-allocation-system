@@ -2,7 +2,7 @@ function runAllocation() {
   const outputDiv = document.getElementById("output");
   outputDiv.innerHTML = "";
 
-  // -------- INPUTS --------
+  // ---------------- INPUTS ----------------
   const numClassrooms = parseInt(document.getElementById("classrooms").value);
   const rows = parseInt(document.getElementById("rows").value);
   const cols = parseInt(document.getElementById("cols").value);
@@ -11,15 +11,15 @@ function runAllocation() {
   const numInvigilators = parseInt(document.getElementById("invigilators").value);
 
   const subjects = document.getElementById("subjects").value
-    .split(",").map(s => s.trim()).filter(s => s !== "");
+    .split(",").map(s => s.trim()).filter(Boolean);
 
   const lateSubjects = document.getElementById("lateSubjects").value
-    .split(",").map(s => s.trim()).filter(s => s !== "");
+    .split(",").map(s => s.trim()).filter(Boolean);
 
   const absentIds = document.getElementById("absent").value
-    .split(",").map(s => parseInt(s.trim())).filter(s => !isNaN(s));
+    .split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
 
-  // -------- VALIDATION --------
+  // ---------------- VALIDATION ----------------
   if (
     !numClassrooms || !rows || !cols || !subjectLimit ||
     !numStudents || !numInvigilators ||
@@ -30,17 +30,21 @@ function runAllocation() {
     return;
   }
 
-  // -------- SETUP --------
+  // ---------------- SETUP ----------------
   const seatsPerClassroom = rows * cols;
   const timeSlots = ["Morning", "Afternoon"];
   const questionSets = ["A", "B", "C", "D"];
 
-  // -------- STUDENT POOL --------
-  let studentPool = subjects.map((subj, i) => ({
-    id: i,
-    subject: subj,
-    set: questionSets[i % 4]
-  }));
+  // ---------------- STUDENT POOL ----------------
+  let studentPool = [];
+
+  subjects.forEach((subj, i) => {
+    studentPool.push({
+      id: i,
+      subject: subj,
+      set: questionSets[i % 4]
+    });
+  });
 
   lateSubjects.forEach((subj, i) => {
     studentPool.push({
@@ -50,7 +54,7 @@ function runAllocation() {
     });
   });
 
-  // -------- INVIGILATORS --------
+  // ---------------- INVIGILATORS ----------------
   let invigilators = [];
   for (let i = 0; i < numInvigilators; i++) {
     if (!absentIds.includes(i)) {
@@ -59,11 +63,12 @@ function runAllocation() {
   }
 
   if (invigilators.length === 0) {
-    outputDiv.innerHTML = "<p style='color:red'>No invigilators available.</p>";
+    outputDiv.innerHTML =
+      "<p style='color:red'>No invigilators available.</p>";
     return;
   }
 
-  // -------- SEAT ALLOCATION WITH CONFLICT RESOLUTION --------
+  // ---------------- SEAT ALLOCATION ----------------
   for (let slot of timeSlots) {
     if (studentPool.length === 0) break;
 
@@ -71,6 +76,8 @@ function runAllocation() {
       <div class="slot">
         <h3>Time Slot: ${slot}</h3>
     `;
+
+    let deferredQueue = [];
 
     for (let c = 0; c < numClassrooms; c++) {
       let subjectCount = {};
@@ -90,39 +97,37 @@ function runAllocation() {
       `;
 
       for (let seat = 0; seat < seatsPerClassroom; seat++) {
-        let allocatedIndex = -1;
+        let chosenIndex = -1;
 
-        // Try to find a non-conflicting student
         for (let i = 0; i < studentPool.length; i++) {
-          const candidate = studentPool[i];
+          const s = studentPool[i];
 
-          const subjectUsed = subjectCount[candidate.subject] || 0;
           const conflict =
             (lastStudent &&
-              (candidate.subject === lastStudent.subject ||
-               candidate.set === lastStudent.set)) ||
-            subjectUsed >= subjectLimit;
+              (s.subject === lastStudent.subject ||
+               s.set === lastStudent.set)) ||
+            (subjectCount[s.subject] || 0) >= subjectLimit;
 
           if (!conflict) {
-            allocatedIndex = i;
+            chosenIndex = i;
             break;
           }
         }
 
-        if (allocatedIndex === -1) {
+        if (chosenIndex === -1) {
           tableHTML += `
             <tr class="conflict">
               <td>${seat}</td>
               <td>-</td>
               <td>-</td>
               <td>-</td>
-              <td>Conflict</td>
+              <td>Deferred</td>
             </tr>
           `;
           continue;
         }
 
-        const student = studentPool.splice(allocatedIndex, 1)[0];
+        const student = studentPool.splice(chosenIndex, 1)[0];
 
         tableHTML += `
           <tr>
@@ -147,6 +152,9 @@ function runAllocation() {
       outputDiv.innerHTML += tableHTML;
     }
 
+    // Reinsert deferred students for next slot
+    studentPool = studentPool.concat(deferredQueue);
+
     outputDiv.innerHTML += `</div>`;
   }
 
@@ -158,24 +166,46 @@ function runAllocation() {
     `;
   }
 
-  // -------- INVIGILATOR ASSIGNMENT --------
+  // ---------------- INVIGILATOR ASSIGNMENT ----------------
   outputDiv.innerHTML += `<h3>Invigilator Assignment</h3>`;
 
-  for (let c = 0; c < numClassrooms; c++) {
-    invigilators.sort((a, b) => a.load - b.load);
-    invigilators[0].load++;
+  timeSlots.forEach(slot => {
+    outputDiv.innerHTML += `<h4>${slot}</h4>`;
+    let usedThisSlot = new Set();
 
-    outputDiv.innerHTML += `
-      <p>
-        Classroom ${c} → Invigilator ${invigilators[0].id}
-        (Load: ${invigilators[0].load})
-      </p>
-    `;
-  }
+    for (let c = 0; c < numClassrooms; c++) {
+      let assigned = false;
+      invigilators.sort((a, b) => a.load - b.load);
+
+      for (let inv of invigilators) {
+        if (!usedThisSlot.has(inv.id)) {
+          usedThisSlot.add(inv.id);
+          inv.load++;
+
+          outputDiv.innerHTML += `
+            <p>
+              Classroom ${c} → Invigilator ${inv.id}
+              (Total Load: ${inv.load})
+            </p>
+          `;
+          assigned = true;
+          break;
+        }
+      }
+
+      if (!assigned) {
+        outputDiv.innerHTML += `
+          <p style="color:red">
+            Classroom ${c} → No invigilator available
+          </p>
+        `;
+      }
+    }
+  });
 }
 
-// -------- RESET --------
+// ---------------- RESET ----------------
 function resetDemo() {
   document.getElementById("output").innerHTML = "";
-  document.querySelectorAll("input").forEach(input => input.value = "");
+  document.querySelectorAll("input").forEach(i => i.value = "");
 }
