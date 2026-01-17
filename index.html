@@ -1,98 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Automated Exam Allocation System</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header>
-    <h1>Automated Exam Allocation System</h1>
-    <p>Conflict-aware, multi-classroom, multi-slot exam scheduling</p>
-</header>
-
 <section>
-    <h2>About the Project</h2>
-    <p>
-        This project is a Data Structures and Algorithms (DSA) based system
-        designed to allocate students to examination seats and invigilators
-        while handling multiple real-world constraints.
-    </p>
-</section>
+  <h2>Exam Seat Allocation Demo</h2>
 
-<section>
-    <h2>Key Features</h2>
-    <ul>
-        <li>Multiple classrooms and seating capacity handling</li>
-        <li>Morning & Afternoon time-slot scheduling</li>
-        <li>Conflict-aware seat allocation</li>
-        <li>Question paper set distribution</li>
-        <li>Subject-per-classroom limit</li>
-        <li>Late student handling using Queue</li>
-        <li>Invigilator load balancing with absence handling</li>
-    </ul>
-</section>
+  <label>Number of Classrooms:</label><br>
+  <input type="number" id="classrooms"><br><br>
 
-<section>
-    <h2>Data Structures Used</h2>
-    <ul>
-        <li>Arrays & Vectors</li>
-        <li>Queue (Late students)</li>
-        <li>Hash Map (Subject limits)</li>
-        <li>Priority Queue (Invigilator assignment)</li>
-    </ul>
-</section>
+  <label>Seats per Classroom:</label><br>
+  <input type="number" id="seats"><br><br>
 
-<section>
-    <h2>Workflow</h2>
-    <ol>
-        <li>Input classrooms and capacity</li>
-        <li>Input students and subjects</li>
-        <li>Assign question sets</li>
-        <li>Allocate seats per classroom & time slot</li>
-        <li>Handle late students</li>
-        <li>Assign invigilators fairly</li>
-    </ol>
+  <label>Number of Students:</label><br>
+  <input type="number" id="students"><br><br>
 
-  <h2>Try the Allocation Demo</h2>
-
-  <label>Number of Classrooms:</label>
-  <input type="number" id="classrooms" /><br><br>
-
-  <label>Seats per Classroom:</label>
-  <input type="number" id="seats" /><br><br>
-
-  <label>Number of Students:</label>
-  <input type="number" id="students" /><br><br>
-
-  <label>Subject Codes (comma separated):</label>
-  <input type="text" id="subjects" placeholder="1,1,2,3,3" /><br><br>
+  <label>Subject Codes (comma separated):</label><br>
+  <input type="text" id="subjects" placeholder="1,1,2,2,3,3"><br><br>
 
   <button onclick="runAllocation()">Run Allocation</button>
 </section>
 
 <section>
   <h2>Allocation Output</h2>
-  <pre id="output"></pre>
-
+  <div id="output"></div>
 </section>
-
-<section>
-    <h2>Source Code</h2>
-    <p>
-        View the complete implementation on GitHub:
-        <br>
-        <a href="https://github.com/YOUR_USERNAME/automated-exam-allocation-system" target="_blank">
-            View GitHub Repository
-        </a>
-    </p>
-</section>
-<script src="script.js"></script>
-
-<footer>
-    <p>DSA EL Project • Built by You</p>
-</footer>
-
-</body>
-</html>
