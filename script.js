@@ -1,34 +1,52 @@
-console.log("Exam Allocation System Website Loaded");
 function runAllocation() {
-  const classrooms = parseInt(document.getElementById("classrooms").value);
-  const seats = parseInt(document.getElementById("seats").value);
-  const students = parseInt(document.getElementById("students").value);
+  const numClassrooms = parseInt(document.getElementById("classrooms").value);
+  const seatsPerClass = parseInt(document.getElementById("seats").value);
+  const numStudents = parseInt(document.getElementById("students").value);
   const subjects = document.getElementById("subjects").value
                     .split(",")
-                    .map(Number);
+                    .map(s => s.trim());
 
-  let output = "";
+  const outputDiv = document.getElementById("output");
+  outputDiv.innerHTML = "";
 
-  let capacity = classrooms * seats;
-
-  if (students > capacity) {
-    output += "Warning: Not enough seats for all students.\n\n";
+  if (!numClassrooms || !seatsPerClass || !numStudents || subjects.length !== numStudents) {
+    outputDiv.innerHTML = "<p style='color:red'>Invalid input. Please check values.</p>";
+    return;
   }
 
-  let index = 0;
+  const totalCapacity = numClassrooms * seatsPerClass;
 
-  for (let c = 0; c < classrooms; c++) {
-    output += `Classroom ${c}:\n`;
+  if (numStudents > totalCapacity) {
+    outputDiv.innerHTML += `<p style="color:red">
+      Warning: Only ${totalCapacity} students can be seated.
+    </p>`;
+  }
 
-    for (let s = 0; s < seats && index < students; s++) {
-      output += `  Seat ${s} -> Student ${index} (Subject ${subjects[index]})\n`;
-      index++;
+  let studentIndex = 0;
+  let lastSubject = null;
+
+  for (let c = 0; c < numClassrooms; c++) {
+    let classHTML = `<div style="margin-bottom:15px">
+                       <h3>Classroom ${c}</h3>
+                       <ul>`;
+
+    for (let s = 0; s < seatsPerClass && studentIndex < numStudents; s++) {
+      const currentSubject = subjects[studentIndex];
+
+      if (currentSubject === lastSubject) {
+        classHTML += `<li style="color:orange">
+          Seat ${s}: Conflict detected (same subject nearby)
+        </li>`;
+      } else {
+        classHTML += `<li>
+          Seat ${s}: Student ${studentIndex} (Subject ${currentSubject})
+        </li>`;
+        lastSubject = currentSubject;
+        studentIndex++;
+      }
     }
 
-    output += "\n";
+    classHTML += "</ul></div>";
+    outputDiv.innerHTML += classHTML;
   }
-
-  document.getElementById("output").textContent = output;
 }
-
-
