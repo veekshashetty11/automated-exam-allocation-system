@@ -1,32 +1,29 @@
 function runAllocation() {
-  // -------- READ INPUTS --------
+  const outputDiv = document.getElementById("output");
+  outputDiv.innerHTML = "";
+
+  // -------- INPUTS --------
   const numClassrooms = parseInt(document.getElementById("classrooms").value);
   const rows = parseInt(document.getElementById("rows").value);
   const cols = parseInt(document.getElementById("cols").value);
   const subjectLimit = parseInt(document.getElementById("subjectLimit").value);
   const numStudents = parseInt(document.getElementById("students").value);
-  const subjects = document.getElementById("subjects").value
-    .split(",")
-    .map(s => s.trim());
-
-  const lateSubjectsInput = document.getElementById("lateSubjects").value;
-  const lateSubjects = lateSubjectsInput
-    ? lateSubjectsInput.split(",").map(s => s.trim())
-    : [];
-
   const numInvigilators = parseInt(document.getElementById("invigilators").value);
-  const absentInput = document.getElementById("absent").value;
-  const absentIds = absentInput
-    ? absentInput.split(",").map(id => parseInt(id.trim()))
-    : [];
 
-  const outputDiv = document.getElementById("output");
-  outputDiv.innerHTML = "";
+  const subjects = document.getElementById("subjects").value
+    .split(",").map(s => s.trim()).filter(s => s !== "");
+
+  const lateSubjects = document.getElementById("lateSubjects").value
+    .split(",").map(s => s.trim()).filter(s => s !== "");
+
+  const absentIds = document.getElementById("absent").value
+    .split(",").map(s => parseInt(s.trim())).filter(s => !isNaN(s));
 
   // -------- VALIDATION --------
   if (
     !numClassrooms || !rows || !cols || !subjectLimit ||
-    !numStudents || subjects.length !== numStudents || !numInvigilators
+    !numStudents || !numInvigilators ||
+    subjects.length !== numStudents
   ) {
     outputDiv.innerHTML =
       "<p style='color:red'>Invalid input. Please check all fields.</p>";
@@ -34,36 +31,26 @@ function runAllocation() {
   }
 
   // -------- SETUP --------
+  const seatsPerClassroom = rows * cols;
   const timeSlots = ["Morning", "Afternoon"];
   const questionSets = ["A", "B", "C", "D"];
-  const seatsPerClassroom = rows * cols;
-  const totalCapacity =
-    numClassrooms * seatsPerClassroom * timeSlots.length;
 
-  let studentIndex = 0;
-
-  // -------- STUDENT LIST --------
-  let students = subjects.map((subj, i) => ({
+  // -------- STUDENT POOL --------
+  let studentPool = subjects.map((subj, i) => ({
     id: i,
     subject: subj,
-    set: questionSets[i % questionSets.length]
+    set: questionSets[i % 4]
   }));
 
-  // -------- LATE STUDENT QUEUE (FIFO) --------
-  let lateQueue = lateSubjects.map((subj, i) => ({
-    id: students.length + i,
-    subject: subj,
-    set: questionSets[(students.length + i) % questionSets.length]
-  }));
+  lateSubjects.forEach((subj, i) => {
+    studentPool.push({
+      id: subjects.length + i,
+      subject: subj,
+      set: questionSets[(subjects.length + i) % 4]
+    });
+  });
 
-  if (students.length + lateQueue.length > totalCapacity) {
-    outputDiv.innerHTML += `
-      <p style="color:red">
-        Warning: Capacity insufficient for all students including late arrivals.
-      </p>`;
-  }
-
-  // -------- INVIGILATOR SETUP --------
+  // -------- INVIGILATORS --------
   let invigilators = [];
   for (let i = 0; i < numInvigilators; i++) {
     if (!absentIds.includes(i)) {
@@ -72,14 +59,13 @@ function runAllocation() {
   }
 
   if (invigilators.length === 0) {
-    outputDiv.innerHTML +=
-      "<p style='color:red'>No invigilators available.</p>";
+    outputDiv.innerHTML = "<p style='color:red'>No invigilators available.</p>";
     return;
   }
 
-  // -------- SEAT ALLOCATION --------
+  // -------- SEAT ALLOCATION WITH CONFLICT RESOLUTION --------
   for (let slot of timeSlots) {
-    if (studentIndex >= students.length && lateQueue.length === 0) break;
+    if (studentPool.length === 0) break;
 
     outputDiv.innerHTML += `
       <div class="slot">
@@ -90,7 +76,7 @@ function runAllocation() {
       let subjectCount = {};
       let lastStudent = null;
 
-      outputDiv.innerHTML += `
+      let tableHTML = `
         <div class="classroom-card">
           <h4>Classroom ${c}</h4>
           <table>
@@ -104,37 +90,27 @@ function runAllocation() {
       `;
 
       for (let seat = 0; seat < seatsPerClassroom; seat++) {
-        let currentStudent = null;
+        let allocatedIndex = -1;
 
-        if (studentIndex < students.length) {
-          currentStudent = students[studentIndex];
-        } else if (lateQueue.length > 0) {
-          currentStudent = lateQueue[0];
-        } else {
-          break;
+        // Try to find a non-conflicting student
+        for (let i = 0; i < studentPool.length; i++) {
+          const candidate = studentPool[i];
+
+          const subjectUsed = subjectCount[candidate.subject] || 0;
+          const conflict =
+            (lastStudent &&
+              (candidate.subject === lastStudent.subject ||
+               candidate.set === lastStudent.set)) ||
+            subjectUsed >= subjectLimit;
+
+          if (!conflict) {
+            allocatedIndex = i;
+            break;
+          }
         }
 
-        let conflict = false;
-
-        // adjacency conflict
-        if (
-          lastStudent &&
-          (currentStudent.subject === lastStudent.subject ||
-           currentStudent.set === lastStudent.set)
-        ) {
-          conflict = true;
-        }
-
-        // subject limit per classroom
-        subjectCount[currentStudent.subject] =
-          subjectCount[currentStudent.subject] || 0;
-
-        if (subjectCount[currentStudent.subject] >= subjectLimit) {
-          conflict = true;
-        }
-
-        if (conflict) {
-          outputDiv.innerHTML += `
+        if (allocatedIndex === -1) {
+          tableHTML += `
             <tr class="conflict">
               <td>${seat}</td>
               <td>-</td>
@@ -146,39 +122,38 @@ function runAllocation() {
           continue;
         }
 
-        outputDiv.innerHTML += `
+        const student = studentPool.splice(allocatedIndex, 1)[0];
+
+        tableHTML += `
           <tr>
             <td>${seat}</td>
-            <td>${currentStudent.id}</td>
-            <td>${currentStudent.subject}</td>
-            <td>${currentStudent.set}</td>
+            <td>${student.id}</td>
+            <td>${student.subject}</td>
+            <td>${student.set}</td>
             <td class="ok">Allocated</td>
           </tr>
         `;
 
-        subjectCount[currentStudent.subject]++;
-        lastStudent = currentStudent;
-
-        if (studentIndex < students.length) {
-          studentIndex++;
-        } else {
-          lateQueue.shift(); // dequeue late student
-        }
+        subjectCount[student.subject] =
+          (subjectCount[student.subject] || 0) + 1;
+        lastStudent = student;
       }
 
-      outputDiv.innerHTML += `
+      tableHTML += `
           </table>
         </div>
       `;
+
+      outputDiv.innerHTML += tableHTML;
     }
 
     outputDiv.innerHTML += `</div>`;
   }
 
-  if (lateQueue.length > 0) {
+  if (studentPool.length > 0) {
     outputDiv.innerHTML += `
       <p style="color:red">
-        Late students remaining in queue: ${lateQueue.length}
+        Students remaining unallocated: ${studentPool.length}
       </p>
     `;
   }
@@ -188,21 +163,19 @@ function runAllocation() {
 
   for (let c = 0; c < numClassrooms; c++) {
     invigilators.sort((a, b) => a.load - b.load);
-    let chosen = invigilators[0];
-    chosen.load++;
+    invigilators[0].load++;
 
     outputDiv.innerHTML += `
       <p>
-        Classroom ${c} → Invigilator ${chosen.id}
-        (Load: ${chosen.load})
+        Classroom ${c} → Invigilator ${invigilators[0].id}
+        (Load: ${invigilators[0].load})
       </p>
     `;
   }
 }
 
-// -------- RESET FUNCTION --------
+// -------- RESET --------
 function resetDemo() {
   document.getElementById("output").innerHTML = "";
-  const inputs = document.querySelectorAll("input");
-  inputs.forEach(input => input.value = "");
+  document.querySelectorAll("input").forEach(input => input.value = "");
 }
