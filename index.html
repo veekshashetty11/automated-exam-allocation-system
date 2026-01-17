@@ -1,34 +1,152 @@
-<section>
-  <h2>Exam Seat Allocation Demo</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Automated Exam Allocation System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <label>Number of Classrooms:</label><br>
-  <input type="number" id="classrooms"><br><br>
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="style.css">
 
-  <label>Seats per Classroom:</label><br>
-  <input type="number" id="seats"><br><br>
+  <style>
+    /* Basic layout safety in case CSS not loaded */
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8fafc;
+      margin: 0;
+      padding: 0;
+    }
 
-  <label>Number of Students:</label><br>
-  <input type="number" id="students"><br><br>
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
 
-  <label>Subject Codes (comma separated):</label><br>
-  <input type="text" id="subjects" placeholder="1,1,2,2,3,3"><br><br> 
-  
-  <label>Late Student Subject Codes (comma separated):</label><br>
-<input type="text" id="lateSubjects" placeholder="4,5"><br><br>
+    main {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
 
-<label>Number of Invigilators:</label><br>
-<input type="number" id="invigilators"><br><br>
+    section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
 
-<label>Absent Invigilator IDs (comma separated):</label><br>
-<input type="text" id="absent" placeholder="1,3"><br><br>
+    label {
+      font-weight: bold;
+    }
 
-  <button onclick="runAllocation()">Run Allocation</button>
-  <button onclick="resetDemo()" style="margin-left:10px;background:#6b7280">
-  Reset
-</button>
-</section>
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
 
-<section>
-  <h2>Allocation Output</h2>
-  <div id="output"></div>
-</section>
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .run-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .reset-btn {
+      background: #6b7280;
+      color: white;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Automated Exam Allocation System</h1>
+  <p>DSA-based Exam Seating & Invigilator Allocation Demo</p>
+</header>
+
+<main>
+
+  <!-- ABOUT SECTION -->
+  <section>
+    <h2>About the Project</h2>
+    <p>
+      This project demonstrates an automated exam seat allocation system using
+      core Data Structures and Algorithms concepts. The website provides an
+      interactive simulation of the allocation process, while the main algorithm
+      is implemented in C++ for academic evaluation.
+    </p>
+  </section>
+
+  <!-- INPUT SECTION -->
+  <section>
+    <h2>Exam Allocation Input</h2>
+
+    <label>Number of Classrooms:</label>
+    <input type="number" id="classrooms">
+
+    <label>Rows per Classroom:</label>
+    <input type="number" id="rows">
+
+    <label>Columns per Classroom:</label>
+    <input type="number" id="cols">
+
+    <label>Maximum Students per Subject per Classroom:</label>
+    <input type="number" id="subjectLimit">
+
+    <label>Number of Students:</label>
+    <input type="number" id="students">
+
+    <label>Subject Codes (comma separated):</label>
+    <input type="text" id="subjects" placeholder="1,1,2,2,3,3">
+
+    <label>Late Student Subject Codes (comma separated):</label>
+    <input type="text" id="lateSubjects" placeholder="4,5">
+
+    <label>Number of Invigilators:</label>
+    <input type="number" id="invigilators">
+
+    <label>Absent Invigilator IDs (comma separated):</label>
+    <input type="text" id="absent" placeholder="1,3">
+
+    <button class="run-btn" onclick="runAllocation()">Run Allocation</button>
+    <button class="reset-btn" onclick="resetDemo()">Reset</button>
+  </section>
+
+  <!-- OUTPUT SECTION -->
+  <section>
+    <h2>Allocation Output</h2>
+    <div id="output"></div>
+  </section>
+
+  <!-- FOOTER -->
+  <section>
+    <h3>How This Works</h3>
+    <p>
+      • Students are allocated classroom-wise and time-slot-wise<br>
+      • Question paper sets (A/B/C/D) are assigned cyclically<br>
+      • Subject conflicts and per-classroom limits are enforced<br>
+      • Late students are handled using a FIFO queue<br>
+      • Invigilators are assigned using load-balanced scheduling<br>
+    </p>
+  </section>
+
+</main>
+
+<!-- Link JavaScript -->
+<script src="script.js"></script>
+
+</body>
+</html>
